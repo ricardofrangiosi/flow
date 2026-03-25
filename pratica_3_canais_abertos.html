@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prática de Laboratório – Canais Abertos (Ultrassônico)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary:   #0284c7;
+      --accent:    #0ea5e9;
+      --cyan:      #06b6d4;
+      --green:     #059669;
+      --yellow:    #d97706;
+      --red:       #dc2626;
+      --surface:   #f8fafc;
+      --border:    #e2e8f0;
+      --text:      #1e293b;
+      --muted:     #64748b;
+      --mono:      'Share Tech Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--surface);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      line-height: 1.7;
+      padding: 30px 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* ── CABEÇALHO ── */
+    .cover {
+      background: linear-gradient(135deg, var(--primary), #0369a1);
+      color: #fff;
+      padding: 32px 36px;
+      border-radius: 14px;
+      margin-bottom: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cover::after {
+      content: '🌊';
+      position: absolute;
+      right: 30px; top: 20px;
+      font-size: 80px;
+      opacity: 0.15;
+    }
+    .cover .institution { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.7; margin-bottom: 8px; }
+    .cover h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+    .cover .subtitle { font-size: 14px; opacity: 0.8; margin-bottom: 18px; }
+    .cover-meta { display: flex; gap: 24px; flex-wrap: wrap; font-size: 12px; opacity: 0.85; }
+    .cover-meta span::before { content: '▸ '; }
+
+    /* ── SEÇÕES ── */
+    section { margin-bottom: 28px; }
+    h2 {
+      font-size: 15px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--primary);
+      border-bottom: 2px solid var(--accent);
+      padding-bottom: 6px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    h3 { font-size: 14px; font-weight: 600; color: var(--text); margin: 14px 0 8px; }
+
+    p { margin-bottom: 10px; }
+    ul, ol { padding-left: 22px; margin-bottom: 10px; }
+    li { margin-bottom: 4px; }
+
+    /* ── CAIXAS ESPECIAIS ── */
+    .box { border-radius: 10px; padding: 14px 18px; margin: 12px 0; font-size: 13px; }
+    .box-obj  { background: #eff6ff; border-left: 4px solid var(--accent); }
+    .box-info { background: #f0f9ff; border-left: 4px solid var(--cyan); }
+    .box strong { display: block; margin-bottom: 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* ── FÓRMULA ── */
+    .formula {
+      background: #1e293b; color: #7dd3fc; font-family: var(--mono);
+      font-size: 14px; padding: 16px 20px; border-radius: 10px;
+      margin: 12px 0; line-height: 2;
+    }
+    .formula .comment { color: #475569; }
+
+    /* ── TABELAS ── */
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+    th { background: var(--primary); color: #fff; padding: 9px 12px; text-align: left; font-weight: 600; font-size: 12px; }
+    td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+    tr:nth-child(even) td { background: #f8fafc; }
+
+    /* ── CÓDIGO ── */
+    pre {
+      background: #0f172a; color: #94a3b8; font-family: var(--mono);
+      font-size: 12px; padding: 18px; border-radius: 10px;
+      overflow-x: auto; margin: 12px 0; line-height: 1.8;
+    }
+
+    /* ── QUESTÕES ── */
+    .questao { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; margin-bottom: 12px; }
+    .questao .num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 26px; height: 26px; background: var(--primary); color: #fff;
+      border-radius: 50%; font-size: 12px; font-weight: 700; margin-right: 8px; flex-shrink: 0;
+    }
+    .questao-header { display: flex; align-items: flex-start; gap: 4px; font-weight: 600; margin-bottom: 8px; }
+    .resposta { border: 1px dashed var(--border); min-height: 50px; border-radius: 6px; padding: 8px; margin-top: 8px; color: var(--muted); font-size: 12px; }
+
+    @media print { body { padding: 0; } .no-print { display: none; } section { page-break-inside: avoid; } }
+  </style>
+</head>
+<body>
+
+<div class="cover">
+  <p class="institution">Instrumentação Industrial · Prática de Laboratório 3</p>
+  <h1>"Canais Abertos" e Hidrometria</h1>
+  <p class="subtitle">Cálculo de Vazão por Variação de Nível com Ultrassom Estilo CAESB</p>
+  <div class="cover-meta">
+    <span>Sensor: Ultrassônico HC-SR04</span>
+    <span>Tanque: Cilíndrico (R = 0,5m; H = 1,0m)</span>
+    <span>Sistema: Medição Indireta por ΔV/Δt</span>
+    <span>Plataforma: Arduino + Tinkercad</span>
+  </div>
+</div>
+
+<section>
+  <h2>🎯 1. Objetivos de Aprendizagem</h2>
+  <div class="box box-obj">
+    <ul>
+      <li>Entender o princípio de medição indireta de vazão comum em saneamento básico (ETAs e ETEs).</li>
+      <li>Programar o HC-SR04 para medir o nível da água a partir do topo do reservatório.</li>
+      <li>Aplicar fórmulas de Geometria Espacial (Volume do Cilindro) no Arduino.</li>
+      <li>Calcular taxas de escoamento (L/s) comparando janelas de tempo ($Q = \Delta V / \Delta t$).</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>📖 2. Fundamentos Teóricos</h2>
+
+  <h3>2.1 Cenário de Aplicação (Ex: CAESB)</h3>
+  <p>Em empresas de saneamento (como a CAESB, SABESP, etc), é muito comum não se ter um medidor de vazão direto em formato de tubo em todas as saídas de grandes reservatórios rurais apoiados. Para medir o escoamento, instala-se um instrumento ultrassônico de nível no topo. Sabendo a área do tanque, o CLP calcula quantos litros saíram olhando a diferença no nível da água ao longo de alguns segundos.</p>
+
+  <h3>2.2 O Nível a partir do Ultrassom</h3>
+  <p>O sensor ultrassônico mede <strong>distância</strong>: do topo do reservatório até a superfície da água. Logo, o nível de água ($h$) é:</p>
+  <div class="formula">
+    <span class="kw">Nível da Água (h)</span> = Altura Total do Tanque − Distância Medida
+  </div>
+
+  <h3>2.3 Volume do Cilindro</h3>
+  <p>Um reservatório cilíndrico tem o volume dado pela área da base multiplicada pela altura de líquido.</p>
+  <div class="formula">
+    <span class="kw">Área da Base (m²)</span> = π × Raio (m)² <br/>
+    <span class="kw">Volume (m³)</span> = Área da Base × Nível de Água (m) <br/>
+    <span class="kw">Volume (Litros)</span> = Volume (m³) × 1000
+  </div>
+  <div class="box box-info">
+    No nosso laboratório: Raio = 0,5 metros. Altura do Tanque = 1,0 metro.
+  </div>
+
+  <h3>2.4 Vazão de Escoamento</h3>
+  <p>A taxa de vazão volumétrica ($Q$) é a quantidade de fluido subtraída ao longo do tempo. Analisamos de $5$ em $5$ segundos:</p>
+  <div class="formula">
+    <span class="kw">Vazão (L/s)</span> = (Volume Anterior − Volume Atual) ÷ Delta de Tempo (s)
+  </div>
+  <p>Se o volume anterior for maior que o atual, significa que o tanque esvaziou, produzindo uma vazão de saída (positiva).</p>
+</section>
+
+<section>
+  <h2>🔧 3. Esquema e Material (Tinkercad)</h2>
+  <table>
+    <thead><tr><th>Componente Tínkercad</th><th>Ligação Arduino</th></tr></thead>
+    <tbody>
+      <tr><td>Sensor Ultrassônico HC-SR04</td><td>Trig: Pino 9 | Echo: Pino 10 | VCC: 5V | GND: GND</td></tr>
+      <tr><td>Display LCD 16×2 (Sem I2C)</td><td>RS:12, EN:11, D4:5, D5:4, D6:3, D7:2</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>💻 4. Código Arduino Explicado</h2>
+  <pre><span class="kw">#include</span> &lt;LiquidCrystal.h&gt;
+
+LiquidCrystal lcd(<span class="nm">12</span>, <span class="nm">11</span>, <span class="nm">5</span>, <span class="nm">4</span>, <span class="nm">3</span>, <span class="nm">2</span>); 
+
+<span class="kw">const int</span> TRIG_PIN = <span class="nm">9</span>;
+<span class="kw">const int</span> ECHO_PIN = <span class="nm">10</span>;
+
+<span class="cm">// Constantes Físicas do Tanque</span>
+<span class="kw">const float</span> ALTURA_TANQUE_M = <span class="nm">1.00</span>; <span class="cm">// 1 metro</span>
+<span class="kw">const float</span> RAIO_M = <span class="nm">0.50</span>;          <span class="cm">// 50 cm</span>
+<span class="kw">const float</span> AREA_TANQUE_M2 = <span class="nm">3.14159</span> * (RAIO_M * RAIO_M);
+
+<span class="kw">float</span> volumeAnterior_L = <span class="nm">0.0</span>;
+<span class="kw">unsigned long</span> tempoAnterior = <span class="nm">0</span>;
+<span class="kw">const unsigned long</span> INTERVALO = <span class="nm">5000</span>; <span class="cm">// 5 segundos</span>
+
+<span class="cm">// Função auxiliar para ultrassom (retorna em metros)</span>
+<span class="kw">float</span> <span class="fn">medirDistanciaMetros</span>() {
+  <span class="fn">digitalWrite</span>(TRIG_PIN, <span class="kw">LOW</span>); <span class="fn">delayMicroseconds</span>(<span class="nm">2</span>);
+  <span class="fn">digitalWrite</span>(TRIG_PIN, <span class="kw">HIGH</span>); <span class="fn">delayMicroseconds</span>(<span class="nm">10</span>);
+  <span class="fn">digitalWrite</span>(TRIG_PIN, <span class="kw">LOW</span>);
+  <span class="kw">long</span> duracao = <span class="fn">pulseIn</span>(ECHO_PIN, <span class="kw">HIGH</span>);
+  <span class="kw">float</span> dist_cm = (duracao * <span class="nm">0.0343</span>) / <span class="nm">2.0</span>;
+  <span class="kw">return</span> dist_cm / <span class="nm">100.0</span>; 
+}
+
+<span class="kw">void</span> <span class="fn">setup</span>() {
+  lcd.<span class="fn">begin</span>(<span class="nm">16</span>, <span class="nm">2</span>);
+  <span class="fn">pinMode</span>(TRIG_PIN, <span class="kw">OUTPUT</span>);
+  <span class="fn">pinMode</span>(ECHO_PIN, <span class="kw">INPUT</span>);
+
+  <span class="cm">// Inicializa volume base para iniciar as subtrações correntes</span>
+  <span class="kw">float</span> nivel_m = ALTURA_TANQUE_M - <span class="fn">medirDistanciaMetros</span>();
+  <span class="kw">if</span>(nivel_m <span class="kw">&lt;</span> <span class="nm">0</span>) nivel_m = <span class="nm">0</span>;
+  volumeAnterior_L = AREA_TANQUE_M2 * nivel_m * <span class="nm">1000.0</span>; 
+}
+
+<span class="kw">void</span> <span class="fn">loop</span>() {
+  <span class="kw">unsigned long</span> tempoAtual = <span class="fn">millis</span>();
+
+  <span class="cm">// 1. Nível Contínuo</span>
+  <span class="kw">float</span> nivelAtual_M = ALTURA_TANQUE_M - <span class="fn">medirDistanciaMetros</span>();
+  <span class="kw">if</span> (nivelAtual_M <span class="kw">&lt;</span> <span class="nm">0</span>) nivelAtual_M = <span class="nm">0</span>;
+  <span class="kw">float</span> volumeAtual_L = (AREA_TANQUE_M2 * nivelAtual_M) * <span class="nm">1000.0</span>;
+
+  lcd.<span class="fn">setCursor</span>(<span class="nm">0</span>, <span class="nm">0</span>);
+  lcd.<span class="fn">print</span>(<span class="st">"Nivel: "</span>); lcd.<span class="fn">print</span>(nivelAtual_M * <span class="nm">100.0</span>, <span class="nm">1</span>); lcd.<span class="fn">print</span>(<span class="st">" cm  "</span>);
+
+  <span class="cm">// 2. Vazão calculada em janelas fixas (5s)</span>
+  <span class="kw">if</span> (tempoAtual - tempoAnterior >= INTERVALO) {
+    <span class="kw">float</span> deltaTempo_s = (tempoAtual - tempoAnterior) / <span class="nm">1000.0</span>;
+    <span class="kw">float</span> deltaVolume_L = volumeAnterior_L - volumeAtual_L;
+    
+    <span class="kw">float</span> vazao_Ls = <span class="nm">0.0</span>;
+    <span class="kw">if</span> (deltaVolume_L > <span class="nm">0</span>) vazao_Ls = deltaVolume_L / deltaTempo_s;
+
+    lcd.<span class="fn">setCursor</span>(<span class="nm">0</span>, <span class="nm">1</span>);
+    lcd.<span class="fn">print</span>(<span class="st">"Vaz: "</span>); lcd.<span class="fn">print</span>(vazao_Ls, <span class="nm">2</span>); lcd.<span class="fn">print</span>(<span class="st">" L/s  "</span>);
+
+    volumeAnterior_L = volumeAtual_L;
+    tempoAnterior = tempoAtual;
+  }
+}
+  </pre>
+</section>
+
+<section>
+  <h2>🧠 5. Questões de Reflexão</h2>
+
+  <div class="questao">
+    <div class="questao-header"><span class="num">1</span><span>No código, se o <span class="mono">deltaVolume_L</span> for negativo (ou seja, o nível atual é maior que o anterior), calculamos vazão zero no LCD. Por que, para o controle de escoamento CAESB, isso faz sentido? (Dica: o sistema de recalque de entrada versus consumo de saída de uma quadra inteira).</span></div>
+    <div class="resposta"></div>
+  </div>
+
+  <div class="questao">
+    <div class="questao-header"><span class="num">2</span><span>Quais são os riscos ambientais para a leitura do sensor ultrassônico instalar a sonda HC-SR04 em esgoto a céu aberto num dia de chuva? Fatores como temperatura ou gotas na sonda influenciam a velocidade do som?</span></div>
+    <div class="resposta"></div>
+  </div>
+
+</section>
+
+<footer>Laboratório de Instrumentação &nbsp;·&nbsp; Prática CAESB (Ultrassom) &nbsp;·&nbsp; Prof. Ricardo</footer>
+
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laboratório de Vazão – Arduino</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --sec1: #1e40af;
+      --sec2: #0f766e;
+      --sec3: #0369a1;
+      --surface: #f4f7fc;
+      --border: #c8d5e8;
+      --text: #1a1f2e;
+      --muted: #5a6478;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--surface);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .hero {
+      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 60%, #38bdf8 100%);
+      color: #fff;
+      padding: 48px 32px 56px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+    }
+    .hero .badge {
+      display: inline-block; background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.3); padding: 4px 16px;
+      border-radius: 20px; font-size: 11px; letter-spacing: .12em;
+      text-transform: uppercase; font-weight: 600; margin-bottom: 18px;
+    }
+    .hero h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 700; line-height: 1.2; margin-bottom: 10px; }
+    .hero p { font-size: 1rem; opacity: .8; max-width: 600px; margin: 0 auto 28px; line-height: 1.6; }
+    
+    .chips { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    .chip { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25); padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 500; }
+
+    /* ── Content ── */
+    .container { max-width: 900px; margin: 0 auto; padding: 40px 24px 60px; }
+    .section-title { font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--border); }
+
+    /* ── Cards de recurso ── */
+    .resources { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; margin-bottom: 40px; }
+
+    .resource-card {
+      background: #fff; border: 1px solid var(--border); border-radius: 14px;
+      padding: 24px 22px; display: flex; flex-direction: column; gap: 12px;
+      transition: box-shadow .2s, transform .2s; text-decoration: none; color: inherit;
+    }
+    .resource-card:hover { box-shadow: 0 8px 32px rgba(2,132,199,.12); transform: translateY(-2px); }
+
+    .card-icon { font-size: 2.2rem; line-height: 1; }
+    .card-title { font-size: 1.05rem; font-weight: 700; line-height: 1.3; }
+    .card-desc { font-size: .85rem; color: var(--muted); line-height: 1.6; flex: 1; margin-bottom: 12px;}
+
+    /* Botoes */
+    .btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: auto; }
+    .card-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      background: #f1f5f9; color: #334155; padding: 9px 14px; border-radius: 8px;
+      font-size: .82rem; font-weight: 600; text-decoration: none; transition: background .2s; flex: 1;
+    }
+    .card-btn:hover { background: #e2e8f0; }
+    .card-btn.primary { background: var(--primary); color: #fff; }
+    .card-btn.primary:hover { background: var(--primary-dark); }
+    .card-btn.download { border: 1px solid var(--border); background: transparent; }
+    .card-btn.download:hover { background: #f8fafc; color: var(--primary); border-color: var(--primary); }
+
+    .color-1 { border-top: 4px solid var(--sec1); }
+    .color-2 { border-top: 4px solid var(--sec2); }
+    .color-3 { border-top: 4px solid var(--sec3); }
+
+    footer { text-align: center; color: var(--muted); font-size: .78rem; padding: 24px; border-top: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="badge">Automação e Controle</div>
+  <h1>Laboratório Virtual de Vazão</h1>
+  <p>Módulo de rotinas práticas para o Tinkercad Circuits abordando: Mapeamento Analógico-Digital (4-20mA), Aquisição de Pulsos com Interrupções de Hardware (Fator K) e Medição Indireta por Nível em Canais Abertos (Ultrassom).</p>
+  <div class="chips">
+    <span class="chip">⚙️ Arduino C++</span>
+    <span class="chip">💧 Transmissão 4-20mA</span>
+    <span class="chip">🌊 Fator K</span>
+    <span class="chip">📡 Ultrassom CAESB</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="section-title">Práticas Disponíveis</div>
+  <div class="resources">
+
+    <!-- Simulador Web -->
+    <div class="resource-card" style="border-top: 4px solid var(--sec3);">
+      <div class="card-icon">🎛️</div>
+      <div class="card-title">Simulador Web de Vazão</div>
+      <div class="card-desc">
+        Interface interativa online agrupando a simulação das 3 dinâmicas: Calibração 4-20mA, Leitura de Pulsos (Fator K) e Medição Ultrassônica em tempo real.
+      </div>
+      <div class="btn-group">
+        <a class="card-btn primary" href="simulador.html" target="_blank" style="background:var(--sec3);">▶ Abrir Simulador Interativo</a>
+      </div>
+    </div>
+
+    <!-- Prática 1 -->
+    <div class="resource-card color-1">
+      <div class="card-icon">⚡</div>
+      <div class="card-title">Prática 1: Transmissor Analógico (4–20 mA)</div>
+      <div class="card-desc">
+        Aprenda a mapear um sinal de tensão simulado em um padrão industrial de 4 a 20 mA para monitorar uma faixa de vazão de até 150 m³/h no Arduino, incluindo a implementação da função float customizada.
+      </div>
+      <div class="btn-group">
+        <a class="card-btn primary" href="pratica_1_transmissor.html" target="_blank">📄 Abrir Roteiro</a>
+        <a class="card-btn download" href="transmissor.ino" download>⬇ Código .ino</a>
+      </div>
+    </div>
+
+    <!-- Prática 2 -->
+    <div class="resource-card color-2">
+      <div class="card-icon">⚙️</div>
+      <div class="card-title">Prática 2: Fator K (Medidor Turbina)</div>
+      <div class="card-desc">
+        Utilize o gerador de funções do Tinkercad para simular pulsos de uma turbina. Leia as ondas quadradas usando interrupção (attachInterrupt) e converta a frequência em vazão usando a variável de engenharia Fator K.
+      </div>
+      <div class="btn-group">
+        <a class="card-btn primary" href="pratica_2_fator_k.html" target="_blank" style="background:#0f766e;">📄 Abrir Roteiro</a>
+        <a class="card-btn download" href="fator_k.ino" download>⬇ Código .ino</a>
+      </div>
+    </div>
+
+    <!-- Prática 3 -->
+    <div class="resource-card color-3">
+      <div class="card-icon">🌊</div>
+      <div class="card-title">Prática 3: Canais Abertos (Ultrassom)</div>
+      <div class="card-desc">
+        Maneira comum de uso na área de saneamento (CAESB, SABESP). Meça indiretamente o fluxo de saída em um reservatório rastreando o Volume cilíndrico através do sensor HC-SR04 por delta de tempo.
+      </div>
+      <div class="btn-group">
+        <a class="card-btn primary" href="pratica_3_canais_abertos.html" target="_blank" style="background:#0369a1;">📄 Abrir Roteiro</a>
+        <a class="card-btn download" href="canais_abertos.ino" download>⬇ Código .ino</a>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<footer>Laboratório de Instrumentação &amp; Controle &nbsp;|&nbsp; 3 Práticas de Vazão + Tinkercad Circuits</footer>
+
+</body>
+</html>

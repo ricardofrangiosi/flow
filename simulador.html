@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador Interativo de Vazão</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-light: #334155;
+      --text: #f8fafc;
+      --text-muted: #cbd5e1;
+      --primary: #38bdf8;
+      --primary-dark: #0284c7;
+      --alert: #ef4444;
+      --success: #10b981;
+      --warn: #f59e0b;
+      --mono: 'Share Tech Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    header { text-align: center; margin-bottom: 40px; width: 100%; max-width: 1000px;}
+    h1 { font-size: 2.2rem; font-weight: 800; color: var(--primary); margin-bottom: 10px; }
+    p.subtitle { color: var(--text-muted); font-size: 1.1rem; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; width: 100%; max-width: 1100px; }
+    
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--surface-light);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      border-bottom: 1px solid var(--surface-light);
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+    }
+    .panel h2 { font-size: 1.2rem; display: flex; align-items: center; gap: 8px;}
+    .panel h2 span { background: var(--surface-light); padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; letter-spacing: 1px; color: var(--primary); }
+
+    /* CONTROLS */
+    .control-group { margin-bottom: 20px; }
+    label { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 10px; color: var(--text-muted); font-weight: 600; }
+    
+    input[type="range"] {
+      -webkit-appearance: none; width: 100%; height: 6px; background: var(--surface-light);
+      border-radius: 6px; outline: none; margin-bottom: 5px;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none; width: 20px; height: 20px;
+      border-radius: 50%; background: var(--primary); cursor: pointer;
+      transition: transform 0.1s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+    /* DISPLAYS */
+    .display-box {
+      background: #020617;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 16px;
+      font-family: var(--mono);
+      text-align: right;
+      position: relative;
+      margin-bottom: 15px;
+    }
+    .display-box .label {
+      position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+      font-family: 'Inter', sans-serif; font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;
+    }
+    .display-value { font-size: 1.6rem; color: #38bdf8; text-shadow: 0 0 10px rgba(56, 189, 248, 0.4); }
+    .display-unit { font-size: 0.9rem; color: #64748b; margin-left: 5px; }
+
+    /* TANK VISUALIZATION */
+    .tank-container {
+      width: 100px; height: 140px;
+      border: 3px solid #475569;
+      border-top: none;
+      border-radius: 0 0 10px 10px;
+      margin: 20px auto;
+      position: relative;
+      background: rgba(255,255,255,0.02);
+      overflow: hidden;
+    }
+    .tank-water {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: linear-gradient(180deg, rgba(56, 189, 248, 0.5) 0%, rgba(2, 132, 199, 0.8) 100%);
+      transition: height 0.3s ease;
+      height: 100%; /* Default */
+    }
+    .sensor {
+      position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+      width: 40px; height: 20px; background: #64748b; border-radius: 4px;
+      text-align: center; line-height: 20px; font-size: 10px; color: #fff;
+    }
+
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Laboratório Digital de Vazão</h1>
+    <p class="subtitle">Simulador Interativo das 3 Práticas de Instrumentação</p>
+  </header>
+
+  <div class="grid">
+    
+    <!-- PRÁTICA 1 -->
+    <div class="panel" id="panel-1">
+      <div class="panel-header">
+        <h2>Transmissor Analógico <span>4-20mA</span></h2>
+      </div>
+      
+      <div class="control-group">
+        <label><span>Sinal ADC Simulado (Potenciômetro)</span> <span id="adc-val">512</span></label>
+        <input type="range" id="adc-slider" min="0" max="1023" value="512">
+      </div>
+
+      <div class="display-box">
+        <span class="label">Corrente</span>
+        <span class="display-value" id="disp-ma">12.0</span><span class="display-unit">mA</span>
+      </div>
+      
+      <div class="display-box">
+        <span class="label">Vazão</span>
+        <span class="display-value" id="disp-m3h">75.0</span><span class="display-unit">m³/h</span>
+      </div>
+    </div>
+
+    <!-- PRÁTICA 2 -->
+    <div class="panel" id="panel-2">
+      <div class="panel-header">
+        <h2>Fator K (Turbina) <span>PULSOS</span></h2>
+      </div>
+      
+      <div class="control-group">
+        <label><span>Frequência do Gerador</span> <span id="freq-val">15 Hz</span></label>
+        <input type="range" id="freq-slider" min="0" max="100" value="15">
+      </div>
+
+      <div class="display-box" style="margin-top:40px;">
+        <span class="label">Fator K</span>
+        <span class="display-value">450</span><span class="display-unit">p/L</span>
+      </div>
+
+      <div class="display-box">
+        <span class="label">Vazão Calc.</span>
+        <span class="display-value" id="disp-lmin">2.00</span><span class="display-unit">L/min</span>
+      </div>
+    </div>
+
+    <!-- PRÁTICA 3 -->
+    <div class="panel" id="panel-3">
+      <div class="panel-header">
+        <h2>Canais Abertos <span>ULTRASSOM</span></h2>
+      </div>
+      
+      <!-- Tanque Visual -->
+      <div style="position: relative;">
+        <div class="sensor">HC-SR04</div>
+        <div class="tank-container">
+          <div class="tank-water" id="tank-water"></div>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label><span>Distância Medida (Sensor -> Água)</span> <span id="dist-val">0.50 m</span></label>
+        <input type="range" id="dist-slider" min="0.05" max="1.00" step="0.01" value="0.50">
+      </div>
+
+      <div class="display-box">
+        <span class="label">Nível Água</span>
+        <span class="display-value" id="disp-nivel">50.0</span><span class="display-unit">cm</span>
+      </div>
+
+      <div class="display-box">
+        <span class="label">Vazão Saída</span>
+        <span class="display-value" id="disp-ls">0.00</span><span class="display-unit">L/s</span>
+      </div>
+      <p style="text-align: right; font-size:11px; color: var(--text-muted);">*Vazão baseada na variação a cada clique do slider</p>
+    </div>
+
+  </div>
+
+  <script>
+    // --- Prática 1: Transmissor Analógico ---
+    const adcSlider = document.getElementById('adc-slider');
+    const adcVal = document.getElementById('adc-val');
+    const dispMa = document.getElementById('disp-ma');
+    const dispM3h = document.getElementById('disp-m3h');
+
+    function updatePratica1() {
+      const adc = parseInt(adcSlider.value);
+      adcVal.innerText = adc;
+      // Map 0-1023 -> 4-20
+      const corrente = 4.0 + (adc / 1023.0) * 16.0;
+      dispMa.innerText = corrente.toFixed(1);
+      // Map 4-20 -> 0-150
+      const vazao = ((corrente - 4.0) / 16.0) * 150.0;
+      dispM3h.innerText = vazao.toFixed(1);
+    }
+    adcSlider.addEventListener('input', updatePratica1);
+    updatePratica1();
+
+    // --- Prática 2: Fator K ---
+    const freqSlider = document.getElementById('freq-slider');
+    const freqVal = document.getElementById('freq-val');
+    const dispLmin = document.getElementById('disp-lmin');
+    const FATOR_K = 450.0;
+
+    function updatePratica2() {
+      const freq = parseInt(freqSlider.value);
+      freqVal.innerText = freq + " Hz";
+      const vazao = (freq * 60.0) / FATOR_K;
+      dispLmin.innerText = vazao.toFixed(2);
+    }
+    freqSlider.addEventListener('input', updatePratica2);
+    updatePratica2();
+
+    // --- Prática 3: Canais Abertos ---
+    const distSlider = document.getElementById('dist-slider');
+    const distVal = document.getElementById('dist-val');
+    const dispNivel = document.getElementById('disp-nivel');
+    const dispLs = document.getElementById('disp-ls');
+    const tankWater = document.getElementById('tank-water');
+
+    const ALTURA_TANQUE = 1.0;
+    const AREA_TANQUE = 3.14159 * (0.5 * 0.5); // Raio 0.5m
+    let lastVolume = (AREA_TANQUE * (ALTURA_TANQUE - parseFloat(distSlider.value))) * 1000;
+    let lastTime = Date.now();
+
+    function updatePratica3() {
+      const dist = parseFloat(distSlider.value);
+      distVal.innerText = dist.toFixed(2) + " m";
+      
+      let nivel = ALTURA_TANQUE - dist;
+      if(nivel < 0) nivel = 0;
+
+      // Visual Update
+      const percent = (nivel / ALTURA_TANQUE) * 100;
+      tankWater.style.height = percent + '%';
+      dispNivel.innerText = (nivel * 100).toFixed(1);
+
+      // Vazão Simulation
+      const currentTime = Date.now();
+      const currentVolume = AREA_TANQUE * nivel * 1000;
+      
+      // Calculate diff
+      const dt = (currentTime - lastTime) / 1000.0; // in seconds
+      if (dt > 0.1) {
+        const dv = lastVolume - currentVolume;
+        let flow = 0;
+        if (dv > 0) {
+          flow = dv / dt;
+        }
+        dispLs.innerText = flow.toFixed(2);
+        lastVolume = currentVolume;
+        lastTime = currentTime;
+      }
+    }
+    
+    distSlider.addEventListener('input', updatePratica3);
+    
+    // Auto reset flow to 0 if not moving
+    setInterval(() => {
+      const currentTime = Date.now();
+      const dt = (currentTime - lastTime) / 1000.0;
+      if (dt > 0.5) {
+         dispLs.innerText = "0.00";
+      }
+    }, 500);
+
+    updatePratica3();
+
+  </script>
+</body>
+</html>

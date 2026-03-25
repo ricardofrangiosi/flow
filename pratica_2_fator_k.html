@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prática de Laboratório – Medidor de Pulsos (Fator K)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary:   #0f766e;
+      --accent:    #0d9488;
+      --cyan:      #06b6d4;
+      --green:     #059669;
+      --yellow:    #d97706;
+      --red:       #dc2626;
+      --surface:   #f8fafc;
+      --border:    #e2e8f0;
+      --text:      #1e293b;
+      --muted:     #64748b;
+      --mono:      'Share Tech Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--surface);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      line-height: 1.7;
+      padding: 30px 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* ── CABEÇALHO ── */
+    .cover {
+      background: linear-gradient(135deg, var(--primary), #115e59);
+      color: #fff;
+      padding: 32px 36px;
+      border-radius: 14px;
+      margin-bottom: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cover::after {
+      content: '⚙️';
+      position: absolute;
+      right: 30px; top: 20px;
+      font-size: 80px;
+      opacity: 0.15;
+    }
+    .cover .institution { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.7; margin-bottom: 8px; }
+    .cover h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+    .cover .subtitle { font-size: 14px; opacity: 0.8; margin-bottom: 18px; }
+    .cover-meta { display: flex; gap: 24px; flex-wrap: wrap; font-size: 12px; opacity: 0.85; }
+    .cover-meta span::before { content: '▸ '; }
+
+    /* ── SEÇÕES ── */
+    section { margin-bottom: 28px; }
+    h2 {
+      font-size: 15px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--primary);
+      border-bottom: 2px solid var(--accent);
+      padding-bottom: 6px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    h3 { font-size: 14px; font-weight: 600; color: var(--text); margin: 14px 0 8px; }
+
+    p { margin-bottom: 10px; }
+    ul, ol { padding-left: 22px; margin-bottom: 10px; }
+    li { margin-bottom: 4px; }
+
+    /* ── CAIXAS ESPECIAIS ── */
+    .box {
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 12px 0;
+      font-size: 13px;
+    }
+    .box-obj  { background: #f0fdf4; border-left: 4px solid var(--accent); }
+    .box-info { background: #f0f9ff; border-left: 4px solid var(--cyan); }
+    .box strong { display: block; margin-bottom: 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* ── FÓRMULA ── */
+    .formula {
+      background: #1e293b;
+      color: #7dd3fc;
+      font-family: var(--mono);
+      font-size: 14px;
+      padding: 16px 20px;
+      border-radius: 10px;
+      margin: 12px 0;
+      line-height: 2;
+    }
+    .formula .comment { color: #475569; }
+
+    /* ── TABELAS ── */
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+    th {
+      background: var(--primary);
+      color: #fff;
+      padding: 9px 12px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 12px;
+    }
+    td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+    tr:nth-child(even) td { background: #f8fafc; }
+
+    /* ── CÓDIGO ── */
+    pre {
+      background: #0f172a;
+      color: #94a3b8;
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 18px;
+      border-radius: 10px;
+      overflow-x: auto;
+      margin: 12px 0;
+      line-height: 1.8;
+    }
+    .kw  { color: #c084fc; }
+    .fn  { color: #60a5fa; }
+    .st  { color: #34d399; }
+    .cm  { color: #475569; }
+    .nm  { color: #f59e0b; }
+
+    /* ── QUESTÕES ── */
+    .questao {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 12px;
+    }
+    .questao .num {
+      display: inline-flex;
+      align-items: center; justify-content: center;
+      width: 26px; height: 26px; background: var(--primary);
+      color: #fff; border-radius: 50%; font-size: 12px; font-weight: 700;
+      margin-right: 8px; flex-shrink: 0;
+    }
+    .questao-header { display: flex; align-items: flex-start; gap: 4px; font-weight: 600; margin-bottom: 8px; }
+    .resposta { border: 1px dashed var(--border); min-height: 50px; border-radius: 6px; padding: 8px; margin-top: 8px; color: var(--muted); font-size: 12px; }
+
+    /* ── IMPRESSÃO ── */
+    @media print { body { padding: 0; } .no-print { display: none; } section { page-break-inside: avoid; } }
+  </style>
+</head>
+<body>
+
+<!-- ══ CAPA ══════════════════════════════════════════════════ -->
+<div class="cover">
+  <p class="institution">Instrumentação Industrial · Prática de Laboratório 2</p>
+  <h1>Medidor Turbina e Fator K</h1>
+  <p class="subtitle">Processamento Digital de Pulsos em Medidores de Vazão Volumétrica</p>
+  <div class="cover-meta">
+    <span>Sensor: Tipo Turbina (Pulsos)</span>
+    <span>Sinal: Frequência (Hz) / Onda Quadrada</span>
+    <span>Fator K: 450 pulsos/L</span>
+    <span>Plataforma: Arduino + Gerador de Funções</span>
+  </div>
+</div>
+
+<!-- ══ 1. OBJETIVOS ══════════════════════════════════════════ -->
+<section>
+  <h2>🎯 1. Objetivos de Aprendizagem</h2>
+  <div class="box box-obj">
+    <ul>
+      <li>Familiarizar-se com medidores de vazão do tipo turbina.</li>
+      <li>Programar o microcontrolador para ler sinais digitais em alta velocidade utilizando <strong>Interrupções de Hardware</strong>.</li>
+      <li>Explicar a importância do <strong>Fator K</strong> na calibração de medidores industriais.</li>
+      <li>Transformar a frequência dos pulsos (Hz) em vazão volumétrica (L/min).</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ══ 2. FUNDAMENTOS ═══════════════════════════════════════ -->
+<section>
+  <h2>📖 2. Fundamentos Teóricos</h2>
+
+  <h3>2.1 O Medidor Tipo Turbina</h3>
+  <p>O medidor de turbina possui hélices que giram com a passagem do fluido. Embutido ou externo ao tubo há um sensor magnético (ou de Efeito Hall). A cada vez que uma pá da hélice passa pelo sensor no corpo do medidor, ele gera um pulso elétrico. O número de pulsos gerados é proporcional ao volume de fluido que passou pelo medidor.</p>
+
+  <h3>2.2 O Fator K</h3>
+  <p>O <strong>Fator K</strong> é a constante de calibração fornecida pelo fabricante do medidor (impressa na plaqueta do invólucro). Ele indica <strong>quantos pulsos eletromagnéticos o medidor produzirá para a passagem de 1 unidade de volume</strong> do meio medido.</p>
+  <div class="box box-info">
+    No nosso laboratório, o Fator K estabelecido é de <strong>450 pulsos / Litro</strong>. Assim, se passarem 450 pulsos, sabemos que passou exatamente 1 Litro de água na tubulação.
+  </div>
+
+  <h3>2.3 Equação de Conversão HZ → L/min</h3>
+  <p>Sabemos que a Frequência ($f$) em Hertz (Hz) equivale ao número de <strong>pulsos por segundo</strong>.</p>
+  <div class="formula">
+    <span class="comment">// 1. Converter Frequência para Pulsos por Minuto</span><br/>
+    <span class="kw">Pulsos/min</span> = Frequência (Hz) × 60<br/>
+    <br/>
+    <span class="comment">// 2. Encontrar a Vazão usando o Fator K</span><br/>
+    <span class="kw">Vazão (L/min)</span> = Pulsos/min ÷ Fator K
+  </div>
+
+  <h3>2.4 Interrupções de Hardware (attachInterrupt)</h3>
+  <p>O Arduino seria muito lento para ler a mudança de pinos com precisão de microssegundos usando apenas o <span class="mono">digitalRead()</span>. Por isso, usa-se a interrupção. A função <span class="mono">attachInterrupt()</span> força o processador a parar imediatamente o que está fazendo, rodar uma pequena Rotina de Serviço (ISR) para contar o pulso, e então continuar o código principal.</p>
+</section>
+
+<!-- ══ 3. MATERIAIS / ESQUEMA ═══════════════════════════════ -->
+<section>
+  <h2>🔧 3. Esquema Prático no Tinkercad</h2>
+  <p>Utilizaremos o componente <strong>Gerador de Funções</strong> do Tinkercad para simular os pulsos enviados pela turbina.</p>
+  <table>
+    <thead><tr><th>Componente Tínkercad</th><th>Ligação Pino</th></tr></thead>
+    <tbody>
+      <tr><td>Gerador de Funções (Sinal Positivo +)</td><td>Pino Digital 2 (Obrigatório para INT0)</td></tr>
+      <tr><td>Gerador de Funções (Sinal Negativo -)</td><td>GND do Arduino</td></tr>
+      <tr><td>Display LCD 16×2 (Sem I2C)</td><td>Pinos RS: 12, EN: 11, D4 a D7: 6 a 3</td></tr>
+    </tbody>
+  </table>
+  <p><strong>Configuração do Gerador de Funções no simulador:</strong></p>
+  <ul>
+    <li>Frequência: Altere livremente (ex: 15 Hz, 30 Hz)</li>
+    <li>Amplitude: 5.0 V</li>
+    <li>Deslocamento DC (Offset): 2.5 V</li>
+    <li>Função: Onda Quadrada</li>
+  </ul>
+</section>
+
+<!-- ══ 4. CÓDIGO PERFEITO ════════════════════════════════════ -->
+<section>
+  <h2>💻 4. Código Arduino para Contagem de Pulsos</h2>
+
+  <pre><span class="kw">#include</span> &lt;LiquidCrystal.h&gt;
+
+LiquidCrystal <span class="fn">lcd</span>(<span class="nm">12</span>, <span class="nm">11</span>, <span class="nm">6</span>, <span class="nm">5</span>, <span class="nm">4</span>, <span class="nm">3</span>);
+
+<span class="kw">const int</span> PINO_PULSO = <span class="nm">2</span>; <span class="cm">// Pino que suporta interrupção</span>
+<span class="kw">const float</span> FATOR_K = <span class="nm">450.0</span>; <span class="cm">// 450 pulsos/L</span>
+
+<span class="cm">// 'volatile' indica ao compilador que ela muda em backgroud</span>
+<span class="kw">volatile unsigned long</span> contadorPulsos = <span class="nm">0</span>;
+<span class="kw">unsigned long</span> tempoAnterior = <span class="nm">0</span>;
+
+<span class="kw">void</span> <span class="fn">contarPulso</span>() {
+  contadorPulsos++;
+}
+
+<span class="kw">void</span> <span class="fn">setup</span>() {
+  lcd.<span class="fn">begin</span>(<span class="nm">16</span>, <span class="nm">2</span>);
+  <span class="fn">pinMode</span>(PINO_PULSO, <span class="kw">INPUT_PULLUP</span>);
+  
+  <span class="cm">// Ativa Interrupção na borda de SUBIDA do sinal</span>
+  <span class="fn">attachInterrupt</span>(<span class="fn">digitalPinToInterrupt</span>(PINO_PULSO), contarPulso, <span class="kw">RISING</span>);
+}
+
+<span class="kw">void</span> <span class="fn">loop</span>() {
+  <span class="kw">unsigned long</span> tempoAtual = <span class="fn">millis</span>();
+  
+  <span class="cm">// A cada 1 segundo (1000 ms), fecha a janela de leitura</span>
+  <span class="kw">if</span> (tempoAtual - tempoAnterior >= <span class="nm">1000</span>) {
+    <span class="fn">noInterrupts</span>(); <span class="cm">// Pausa p/ não corromper a leitura</span>
+    <span class="kw">unsigned long</span> pulsosLidos = contadorPulsos;
+    contadorPulsos = <span class="nm">0</span>;
+    <span class="fn">interrupts</span>();
+    
+    tempoAnterior = tempoAtual;
+
+    <span class="kw">float</span> frequencia_Hz = (<span class="kw">float</span>)pulsosLidos;
+    <span class="kw">float</span> vazao_Lmin = (frequencia_Hz * <span class="nm">60.0</span>) / FATOR_K;
+
+    lcd.<span class="fn">setCursor</span>(<span class="nm">0</span>, <span class="nm">0</span>);
+    lcd.<span class="fn">print</span>(<span class="st">"Freq: "</span>);
+    lcd.<span class="fn">print</span>(frequencia_Hz, <span class="nm">0</span>);
+    lcd.<span class="fn">print</span>(<span class="st">" Hz  "</span>);
+
+    lcd.<span class="fn">setCursor</span>(<span class="nm">0</span>, <span class="nm">1</span>);
+    lcd.<span class="fn">print</span>(<span class="st">"Vazao:"</span>);
+    lcd.<span class="fn">print</span>(vazao_Lmin, <span class="nm">2</span>);
+    lcd.<span class="fn">print</span>(<span class="st">" L/min "</span>);
+  }
+}
+  </pre>
+</section>
+
+<!-- ══ 5. QUESTÕES DE ANÁLISE ════════════════════════════════ -->
+<section>
+  <h2>🧠 5. Questões de Reflexão</h2>
+
+  <div class="questao">
+    <div class="questao-header"><span class="num">1</span><span>Se um equipamento indicar um fator K de 900 pulsos/litro, a resolução (capacidade de ler incrementos muito pequenos) do medidor seria melhor ou pior do que o de 450? Por quê?</span></div>
+    <div class="resposta"></div>
+  </div>
+
+  <div class="questao">
+    <div class="questao-header"><span class="num">2</span><span>Por que é mandatório usar <span class="mono">noInterrupts()</span> e em seguida <span class="mono">interrupts()</span> quando lemos uma variável atualizada durante uma rotina <span class="mono">attachInterrupt</span> multitarefa?</span></div>
+    <div class="resposta"></div>
+  </div>
+
+</section>
+
+<footer>Laboratório de Instrumentação &nbsp;·&nbsp; Prática de Fator K (Turbina) &nbsp;·&nbsp; Prof. Ricardo</footer>
+
+</body>
+</html>

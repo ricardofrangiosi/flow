@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prática de Laboratório – Transmissor Analógico (4-20 mA)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary:   #1e40af;
+      --accent:    #3b82f6;
+      --cyan:      #06b6d4;
+      --green:     #059669;
+      --yellow:    #d97706;
+      --red:       #dc2626;
+      --surface:   #f8fafc;
+      --border:    #e2e8f0;
+      --text:      #1e293b;
+      --muted:     #64748b;
+      --mono:      'Share Tech Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--surface);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      line-height: 1.7;
+      padding: 30px 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* ── CABEÇALHO ── */
+    .cover {
+      background: linear-gradient(135deg, var(--primary), #1d4ed8);
+      color: #fff;
+      padding: 32px 36px;
+      border-radius: 14px;
+      margin-bottom: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cover::after {
+      content: '💧';
+      position: absolute;
+      right: 30px; top: 20px;
+      font-size: 80px;
+      opacity: 0.15;
+    }
+    .cover .institution { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.7; margin-bottom: 8px; }
+    .cover h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+    .cover .subtitle { font-size: 14px; opacity: 0.8; margin-bottom: 18px; }
+    .cover-meta { display: flex; gap: 24px; flex-wrap: wrap; font-size: 12px; opacity: 0.85; }
+    .cover-meta span::before { content: '▸ '; }
+
+    /* ── SEÇÕES ── */
+    section { margin-bottom: 28px; }
+    h2 {
+      font-size: 15px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--primary);
+      border-bottom: 2px solid var(--accent);
+      padding-bottom: 6px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    h3 { font-size: 14px; font-weight: 600; color: var(--text); margin: 14px 0 8px; }
+
+    p { margin-bottom: 10px; }
+    ul, ol { padding-left: 22px; margin-bottom: 10px; }
+    li { margin-bottom: 4px; }
+
+    /* ── CAIXAS ESPECIAIS ── */
+    .box {
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 12px 0;
+      font-size: 13px;
+    }
+    .box-obj  { background: #eff6ff; border-left: 4px solid var(--accent); }
+    .box-warn { background: #fefce8; border-left: 4px solid var(--yellow); }
+    .box-tip  { background: #f0fdf4; border-left: 4px solid var(--green); }
+    .box-info { background: #f0f9ff; border-left: 4px solid var(--cyan); }
+    .box strong { display: block; margin-bottom: 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* ── FÓRMULA ── */
+    .formula {
+      background: #1e293b;
+      color: #7dd3fc;
+      font-family: var(--mono);
+      font-size: 14px;
+      padding: 16px 20px;
+      border-radius: 10px;
+      margin: 12px 0;
+      line-height: 2;
+    }
+    .formula .comment { color: #475569; }
+
+    /* ── TABELAS ── */
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+    th {
+      background: var(--primary);
+      color: #fff;
+      padding: 9px 12px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 12px;
+    }
+    td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+    tr:nth-child(even) td { background: #f8fafc; }
+    tr:hover td { background: #eff6ff; }
+
+    /* ── CÓDIGO ── */
+    pre {
+      background: #0f172a;
+      color: #94a3b8;
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 18px;
+      border-radius: 10px;
+      overflow-x: auto;
+      margin: 12px 0;
+      line-height: 1.8;
+    }
+    .kw  { color: #c084fc; }
+    .fn  { color: #60a5fa; }
+    .st  { color: #34d399; }
+    .cm  { color: #475569; }
+    .nm  { color: #f59e0b; }
+
+    /* ── PINAGEM ── */
+    .pinagem-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 12px 0;
+    }
+    @media (max-width: 600px) { .pinagem-grid { grid-template-columns: 1fr; } }
+
+    /* ── COLETA DE DADOS ── */
+    .coleta-table td:first-child { font-family: var(--mono); background: #f8fafc; font-weight: 600; }
+
+    /* ── QUESTÕES ── */
+    .questao {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 12px;
+    }
+    .questao .num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px; height: 26px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: 700;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+    .questao-header { display: flex; align-items: flex-start; gap: 4px; font-weight: 600; margin-bottom: 8px; }
+    .resposta {
+      border: 1px dashed var(--border);
+      min-height: 50px;
+      border-radius: 6px;
+      padding: 8px;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    /* ── IMPRESSÃO ── */
+    @media print {
+      body { padding: 0; }
+      .no-print { display: none; }
+      section { page-break-inside: avoid; }
+      pre { font-size: 10px; }
+    }
+
+    /* ── RODAPÉ ── */
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      padding: 20px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ CAPA ══════════════════════════════════════════════════ -->
+<div class="cover">
+  <p class="institution">Instrumentação Industrial · Prática de Laboratório 1</p>
+  <h1>Transmissor Analógico (4-20 mA)</h1>
+  <p class="subtitle">Mapeamento de Sinais Elétricos para Grandezas de Engenharia</p>
+  <div class="cover-meta">
+    <span>Disciplina: Medição de Vazão</span>
+    <span>Sinal: 4 a 20 mA</span>
+    <span>Faixa: 0 a 150 m³/h</span>
+    <span>Plataforma: Arduino + Tinkercad</span>
+  </div>
+</div>
+
+<!-- ══ 1. OBJETIVOS ══════════════════════════════════════════ -->
+<section>
+  <h2>🎯 1. Objetivos de Aprendizagem</h2>
+  <div class="box box-obj">
+    <strong>Ao final desta prática, o aluno será capaz de:</strong>
+    <ul>
+      <li>Compreender o padrão industrial de transmissão de sinal analógico 4-20 mA.</li>
+      <li>Mapear valores lidos do Conversor Analógico-Digital (ADC) para uma escala de corrente.</li>
+      <li>Converter o sinal elétrico (mA) para a grandeza física correspondente (Vazão em m³/h).</li>
+      <li>Implementar uma função de mapeamento linear preciso (float) no Arduino, superando as limitações da função <span class="mono">map()</span> padrão.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ══ 2. FUNDAMENTOS TEÓRICOS ═══════════════════════════════ -->
+<section>
+  <h2>📖 2. Fundamentos Teóricos</h2>
+
+  <h3>2.1 O Padrão 4-20 mA</h3>
+  <p>Na indústria, sensores e transmissores raramente enviam o valor direto da medição (ex: "100 m³/h"). Em vez disso, eles convertem a medição física em um sinal elétrico proporcional. O padrão mais comum é o loop de corrente de <strong>4 a 20 mA</strong>.</p>
+  <ul>
+    <li><strong>4 mA (Zero Vivo):</strong> Representa o limite inferior da faixa (ex: 0 m³/h). Diferente de 0 mA, o 4 mA permite ao sistema identificar se o cabo rompeu (se cair para 0 mA, é falha, não zero de vazão).</li>
+    <li><strong>20 mA:</strong> Representa o limite superior da faixa calibrada (ex: 150 m³/h).</li>
+  </ul>
+
+  <h3>2.2 Leitura pelo CLP / Microcontrolador</h3>
+  <p>Microcontroladores como o Arduino leem tensão, não corrente. Portanto, nos painéis de controle, coloca-se um resistor de precisão (geralmente de 250 Ω) no circuito. Pela Lei de Ohm (V = R × I):</p>
+  <ul>
+    <li>4 mA × 250 Ω = <strong>1 V</strong></li>
+    <li>20 mA × 250 Ω = <strong>5 V</strong></li>
+  </ul>
+  <p>O Arduino Uno possui um ADC de 10 bits que converte tensões de 0 a 5V em valores matemáticos de <strong>0 a 1023</strong>. Nesta simulação, usaremos um potenciômetro ligado de 0 a 5V para simular diretamente o sinal condicionado que chega ao pino A0 do Arduino.</p>
+
+  <h3>2.3 Equação de Mapeamento (Regra de Três Linear)</h3>
+  <p>Para relacionar as escalas, utilizamos uma interpolação linear:</p>
+  <div class="formula">
+    <span class="kw">ValorOut</span> = (ValorIn − In_Min) × (Out_Max − Out_Min) / (In_Max − In_Min) + Out_Min
+  </div>
+</section>
+
+<!-- ══ 3. MATERIAIS ══════════════════════════════════════════ -->
+<section>
+  <h2>🔧 3. Materiais Necessários (Tinkercad)</h2>
+  <table>
+    <thead><tr><th>Qtd.</th><th>Componente</th><th>Especificação / Função no Tinkercad</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Arduino Uno R3</td><td>Processamento dos dados analógicos.</td></tr>
+      <tr><td>1</td><td>Potenciômetro 10 kΩ</td><td><strong>Simula o Sensor/Transmissor.</strong> Varia a tensão no A0.</td></tr>
+      <tr><td>1</td><td>Display LCD 16×2 (I2C)</td><td>Exibe os valores de corrente e vazão.</td></tr>
+      <tr><td>1</td><td>Protoboard</td><td>(Opcional) Para conexões e barramento de energia.</td></tr>
+      <tr><td>—</td><td>Cabos jumper</td><td>Alimentação e sinal.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ══ 4. PINAGEM / ESQUEMA ═══════════════════════════════════ -->
+<section>
+  <h2>⚡ 4. Esquema de Ligações</h2>
+
+  <div class="pinagem-grid">
+    <table>
+      <thead><tr><th colspan="2">Potenciômetro (Simulador) → Arduino</th></tr></thead>
+      <tbody>
+        <tr><td>Terminal Esquerdo</td><td>GND (0V)</td></tr>
+        <tr><td>Central (Deslizante)</td><td>A0 (Sinal Analógico)</td></tr>
+        <tr><td>Terminal Direito</td><td>5V</td></tr>
+      </tbody>
+    </table>
+    <table>
+      <thead><tr><th colspan="2">LCD 16×2 (I2C) → Arduino</th></tr></thead>
+      <tbody>
+        <tr><td>GND</td><td>GND</td></tr>
+        <tr><td>VCC</td><td>5V</td></tr>
+        <tr><td>SDA</td><td>A4 (ou SDA nativo)</td></tr>
+        <tr><td>SCL</td><td>A5 (ou SCL nativo)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══ 5. CÓDIGO COMPLETO ════════════════════════════════════ -->
+<section>
+  <h2>💻 5. Código Arduino – Comentado</h2>
+
+  <pre><span class="kw">#include</span> &lt;Wire.h&gt;
+<span class="kw">#include</span> &lt;LiquidCrystal_I2C.h&gt;
+
+<span class="cm">// Inicializa o display LCD no endereço I2C 0x27 (padrão no Tinkercad)</span>
+LiquidCrystal_I2C <span class="fn">lcd</span>(<span class="nm">0x27</span>, <span class="nm">16</span>, <span class="nm">2</span>);
+
+<span class="kw">const int</span> PIN_SENSOR = <span class="nm">A0</span>; <span class="cm">// Pino do potenciômetro</span>
+
+<span class="cm">// Função personalizada mapFloat() </span>
+<span class="cm">// O map() nativo só trabalha com inteiros. Para precisão decimal, usamos float.</span>
+<span class="kw">float</span> <span class="fn">mapFloat</span>(<span class="kw">float</span> x, <span class="kw">float</span> in_min, <span class="kw">float</span> in_max, <span class="kw">float</span> out_min, <span class="kw">float</span> out_max) {
+  <span class="kw">return</span> (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
+<span class="kw">void</span> <span class="fn">setup</span>() {
+  lcd.<span class="fn">init</span>();
+  lcd.<span class="fn">backlight</span>();
+  lcd.<span class="fn">setCursor</span>(<span class="nm">0</span>, <span class="nm">0</span>);
+  lcd.<span class="fn">print</span>(<span class="st">"Pratica 1:"</span>);
+  lcd.<span class="fn">setCursor</span>(<span class="nm">0</span>, <span class="nm">1</span>);
+  lcd.<span class="fn">print</span>(<span class="st">"Transmissor"</span>);
+  <span class="fn">delay</span>(<span class="nm">2000</span>);
+  lcd.<span class="fn">clear</span>();
+}
+
+<span class="kw">void</span> <span class="fn">loop</span>() {
+  <span class="cm">// 1. Lê o sinal do "sensor"</span>
+  <span class="kw">int</span> leituraADC = <span class="fn">analogRead</span>(PIN_SENSOR);
+
+  <span class="cm">// 2. Mapeia ADC (0 a 1023) -> Corrente (4.0 a 20.0 mA)</span>
+  <span class="kw">float</span> corrente_mA = <span class="fn">mapFloat</span>(leituraADC, <span class="nm">0</span>, <span class="nm">1023</span>, <span class="nm">4.0</span>, <span class="nm">20.0</span>);
+
+  <span class="cm">// 3. Mapeia Corrente (4.0 a 20.0 mA) -> Vazão (0.0 a 150.0 m³/h)</span>
+  <span class="kw">float</span> vazao_m3h = <span class="fn">mapFloat</span>(corrente_mA, <span class="nm">4.0</span>, <span class="nm">20.0</span>, <span class="nm">0.0</span>, <span class="nm">150.0</span>);
+
+  <span class="cm">// 4. Exibe os resultados no LCD</span>
+  lcd.<span class="fn">setCursor</span>(<span class="nm">0</span>, <span class="nm">0</span>);
+  lcd.<span class="fn">print</span>(<span class="st">"Corrente: "</span>);
+  lcd.<span class="fn">print</span>(corrente_mA, <span class="nm">1</span>);
+  lcd.<span class="fn">print</span>(<span class="st">" mA  "</span>); 
+  
+  lcd.<span class="fn">setCursor</span>(<span class="nm">0</span>, <span class="nm">1</span>);
+  lcd.<span class="fn">print</span>(<span class="st">"Vazao: "</span>);
+  lcd.<span class="fn">print</span>(vazao_m3h, <span class="nm">1</span>);
+  lcd.<span class="fn">print</span>(<span class="st">" m3/h"</span>);
+  
+  <span class="fn">delay</span>(<span class="nm">250</span>);
+}
+  </pre>
+</section>
+
+<!-- ══ 6. PROCEDIMENTO ═══════════════════════════════════════ -->
+<section>
+  <h2>📋 6. Procedimento Experimental</h2>
+  <ol>
+    <li>Acesse o <strong>Tinkercad Circuits</strong> e inicie um novo projeto.</li>
+    <li>Adicione o Arduino Uno, um Potenciômetro e um <strong>LCD 16x2 I2C</strong>.</li>
+    <li>Faça as conexões dos pinos de acordo com a Seção 4. A conexão <em>Wiper</em> (pino central do potenciômetro) deve ir ao pino A0 do Arduino.</li>
+    <li>Na aba Código, escolha "Texto", apague o código padrão e cole o código da seção 5.</li>
+    <li>Clique em <strong>Iniciar Simulação</strong>.</li>
+    <li>Gire o potenciômetro da esquerda para a direita. Observe os valores no LCD mudarem conforme a tensão no pino A0 varia de 0V a 5V.</li>
+    <li>Com o código rodando, responda às questões abaixo no seu relatório.</li>
+  </ol>
+</section>
+
+<!-- ══ 7. QUESTÕES DE ANÁLISE ════════════════════════════════ -->
+<section>
+  <h2>🧠 7. Questões de Análise e Reflexão</h2>
+
+  <div class="questao">
+    <div class="questao-header"><span class="num">1</span><span>No padrão 4-20mA, por que se usa 4 mA como limite mínimo de escala em vez de 0 mA? Qual o nome técnico dado a esse conceito?</span></div>
+    <div class="resposta"></div>
+  </div>
+
+  <div class="questao">
+    <div class="questao-header"><span class="num">2</span><span>A função <span class="mono">map()</span> original do Arduino lida exclusivamente com valores do tipo <span class="mono">long</span>. Explique o que aconteceria se você usasse <span class="mono">map(leituraADC, 0, 1023, 4, 20)</span> no seu código. Que problema de precisão isso geraria?</span></div>
+    <div class="resposta"></div>
+  </div>
+
+  <div class="questao">
+    <div class="questao-header"><span class="num">3</span><span>Se o seu medidor linear de vazão no campo enviar exatos 12 mA, qual a leitura da vazão equivalente que o display deve mostrar? Demonstre o cálculo.</span></div>
+    <div class="resposta"></div>
+  </div>
+</section>
+
+<footer>
+  Laboratório de Instrumentação &nbsp;·&nbsp; Prática de Transmissor 4-20mA &nbsp;·&nbsp; Prof. Ricardo
+</footer>
+
+</body>
+</html>
