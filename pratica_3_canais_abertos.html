@@ -138,7 +138,7 @@
       <li>Entender o princípio de medição indireta de vazão comum em saneamento básico (ETAs e ETEs).</li>
       <li>Programar o HC-SR04 para medir o nível da água a partir do topo do reservatório.</li>
       <li>Aplicar fórmulas de Geometria Espacial (Volume do Cilindro) no Arduino.</li>
-      <li>Calcular taxas de escoamento (L/s) comparando janelas de tempo ($Q = \Delta V / \Delta t$).</li>
+      <li>Calcular taxas de escoamento (L/s) comparando janelas de tempo: <strong><em>Q = ΔV / Δt</em></strong>.</li>
     </ul>
   </div>
 </section>
@@ -180,7 +180,7 @@
     <thead><tr><th>Componente Tínkercad</th><th>Ligação Arduino</th></tr></thead>
     <tbody>
       <tr><td>Sensor Ultrassônico HC-SR04</td><td>Trig: Pino 9 | Echo: Pino 10 | VCC: 5V | GND: GND</td></tr>
-      <tr><td>Display LCD 16×2 (Sem I2C)</td><td>RS:12, EN:11, D4:5, D5:4, D6:3, D7:2</td></tr>
+      <tr><td>Display LCD 16×2</td><td>RS:12, EN:11, D4:5, D5:4, D6:3, <strong>D7:7</strong></td></tr>
     </tbody>
   </table>
 </section>
@@ -189,7 +189,8 @@
   <h2>💻 4. Código Arduino Explicado</h2>
   <pre><span class="kw">#include</span> &lt;LiquidCrystal.h&gt;
 
-LiquidCrystal lcd(<span class="nm">12</span>, <span class="nm">11</span>, <span class="nm">5</span>, <span class="nm">4</span>, <span class="nm">3</span>, <span class="nm">2</span>); 
+<span class="cm">// RS, EN, D4, D5, D6, D7  (pino 7 para D7 — evita conflito com INT0 da Prática 2)</span>
+LiquidCrystal lcd(<span class="nm">12</span>, <span class="nm">11</span>, <span class="nm">5</span>, <span class="nm">4</span>, <span class="nm">3</span>, <span class="nm">7</span>);
 
 <span class="kw">const int</span> TRIG_PIN = <span class="nm">9</span>;
 <span class="kw">const int</span> ECHO_PIN = <span class="nm">10</span>;

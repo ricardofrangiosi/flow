@@ -261,8 +261,8 @@
     <tbody>
       <tr><td>1</td><td>Arduino Uno R3</td><td>Processamento dos dados analógicos.</td></tr>
       <tr><td>1</td><td>Potenciômetro 10 kΩ</td><td><strong>Simula o Sensor/Transmissor.</strong> Varia a tensão no A0.</td></tr>
-      <tr><td>1</td><td>Display LCD 16×2 (I2C)</td><td>Exibe os valores de corrente e vazão.</td></tr>
-      <tr><td>1</td><td>Protoboard</td><td>(Opcional) Para conexões e barramento de energia.</td></tr>
+      <tr><td>1</td><td>Display <strong>LCD 16×2</strong></td><td>Exibe os valores de corrente e vazão. Componente nativo do Tinkercad (busque por "LCD 16 x 2" — sem o sufixo I2C).</td></tr>
+      <tr><td>1</td><td>Protoboard</td><td>Para conexões e barramento de energia.</td></tr>
       <tr><td>—</td><td>Cabos jumper</td><td>Alimentação e sinal.</td></tr>
     </tbody>
   </table>
@@ -277,17 +277,25 @@
       <thead><tr><th colspan="2">Potenciômetro (Simulador) → Arduino</th></tr></thead>
       <tbody>
         <tr><td>Terminal Esquerdo</td><td>GND (0V)</td></tr>
-        <tr><td>Central (Deslizante)</td><td>A0 (Sinal Analógico)</td></tr>
+        <tr><td>Central (Deslizante / Wiper)</td><td>A0 (Sinal Analógico)</td></tr>
         <tr><td>Terminal Direito</td><td>5V</td></tr>
       </tbody>
     </table>
     <table>
-      <thead><tr><th colspan="2">LCD 16×2 (I2C) → Arduino</th></tr></thead>
+      <thead><tr><th colspan="2">LCD 16×2 Paralelo → Arduino</th></tr></thead>
       <tbody>
-        <tr><td>GND</td><td>GND</td></tr>
-        <tr><td>VCC</td><td>5V</td></tr>
-        <tr><td>SDA</td><td>A4 (ou SDA nativo)</td></tr>
-        <tr><td>SCL</td><td>A5 (ou SCL nativo)</td></tr>
+        <tr><td>VSS / GND</td><td>GND</td></tr>
+        <tr><td>VDD / VCC</td><td>5V</td></tr>
+        <tr><td>V0 (contraste)</td><td>GND <em>direto</em> (contraste máximo fixo) <br><small>— ou — pino esquerdo de potenciômetro 10 kΩ (wiper→V0, dir.→GND) para contraste ajustável</small></td></tr>
+        <tr><td>RS</td><td>Pino 12</td></tr>
+        <tr><td>RW</td><td>GND</td></tr>
+        <tr><td>E (Enable)</td><td>Pino 11</td></tr>
+        <tr><td>D4</td><td>Pino 6</td></tr>
+        <tr><td>D5</td><td>Pino 5</td></tr>
+        <tr><td>D6</td><td>Pino 4</td></tr>
+        <tr><td>D7</td><td>Pino 3</td></tr>
+        <tr><td>LED+ (A)</td><td>5V (com resistor 220Ω)</td></tr>
+        <tr><td>LED− (K)</td><td>GND</td></tr>
       </tbody>
     </table>
   </div>
@@ -297,13 +305,12 @@
 <section>
   <h2>💻 5. Código Arduino – Comentado</h2>
 
-  <pre><span class="kw">#include</span> &lt;Wire.h&gt;
-<span class="kw">#include</span> &lt;LiquidCrystal_I2C.h&gt;
+  <pre><span class="kw">#include</span> &lt;LiquidCrystal.h&gt;
 
-<span class="cm">// Inicializa o display LCD no endereço I2C 0x27 (padrão no Tinkercad)</span>
-LiquidCrystal_I2C <span class="fn">lcd</span>(<span class="nm">0x27</span>, <span class="nm">16</span>, <span class="nm">2</span>);
+<span class="cm">// LCD 16x2 Paralelo — nativo no Tinkercad (RS, EN, D4, D5, D6, D7)</span>
+LiquidCrystal <span class="fn">lcd</span>(<span class="nm">12</span>, <span class="nm">11</span>, <span class="nm">6</span>, <span class="nm">5</span>, <span class="nm">4</span>, <span class="nm">3</span>);
 
-<span class="kw">const int</span> PIN_SENSOR = <span class="nm">A0</span>; <span class="cm">// Pino do potenciômetro</span>
+<span class="kw">const int</span> PIN_SENSOR = <span class="nm">A0</span>; <span class="cm">// Potenciômetro simula o sinal 4-20 mA condicionado</span>
 
 <span class="cm">// Função personalizada mapFloat() </span>
 <span class="cm">// O map() nativo só trabalha com inteiros. Para precisão decimal, usamos float.</span>
@@ -312,8 +319,7 @@ LiquidCrystal_I2C <span class="fn">lcd</span>(<span class="nm">0x27</span>, <spa
 }
 
 <span class="kw">void</span> <span class="fn">setup</span>() {
-  lcd.<span class="fn">init</span>();
-  lcd.<span class="fn">backlight</span>();
+  lcd.<span class="fn">begin</span>(<span class="nm">16</span>, <span class="nm">2</span>);
   lcd.<span class="fn">setCursor</span>(<span class="nm">0</span>, <span class="nm">0</span>);
   lcd.<span class="fn">print</span>(<span class="st">"Pratica 1:"</span>);
   lcd.<span class="fn">setCursor</span>(<span class="nm">0</span>, <span class="nm">1</span>);
@@ -334,14 +340,14 @@ LiquidCrystal_I2C <span class="fn">lcd</span>(<span class="nm">0x27</span>, <spa
 
   <span class="cm">// 4. Exibe os resultados no LCD</span>
   lcd.<span class="fn">setCursor</span>(<span class="nm">0</span>, <span class="nm">0</span>);
-  lcd.<span class="fn">print</span>(<span class="st">"Corrente: "</span>);
+  lcd.<span class="fn">print</span>(<span class="st">"I: "</span>);
   lcd.<span class="fn">print</span>(corrente_mA, <span class="nm">1</span>);
-  lcd.<span class="fn">print</span>(<span class="st">" mA  "</span>); 
+  lcd.<span class="fn">print</span>(<span class="st">" mA    "</span>); <span class="cm">// espaços limpam dígitos anteriores</span>
   
   lcd.<span class="fn">setCursor</span>(<span class="nm">0</span>, <span class="nm">1</span>);
-  lcd.<span class="fn">print</span>(<span class="st">"Vazao: "</span>);
+  lcd.<span class="fn">print</span>(<span class="st">"Q: "</span>);
   lcd.<span class="fn">print</span>(vazao_m3h, <span class="nm">1</span>);
-  lcd.<span class="fn">print</span>(<span class="st">" m3/h"</span>);
+  lcd.<span class="fn">print</span>(<span class="st">" m3/h  "</span>);
   
   <span class="fn">delay</span>(<span class="nm">250</span>);
 }
@@ -353,12 +359,12 @@ LiquidCrystal_I2C <span class="fn">lcd</span>(<span class="nm">0x27</span>, <spa
   <h2>📋 6. Procedimento Experimental</h2>
   <ol>
     <li>Acesse o <strong>Tinkercad Circuits</strong> e inicie um novo projeto.</li>
-    <li>Adicione o Arduino Uno, um Potenciômetro e um <strong>LCD 16x2 I2C</strong>.</li>
-    <li>Faça as conexões dos pinos de acordo com a Seção 4. A conexão <em>Wiper</em> (pino central do potenciômetro) deve ir ao pino A0 do Arduino.</li>
-    <li>Na aba Código, escolha "Texto", apague o código padrão e cole o código da seção 5.</li>
+    <li>Adicione um <strong>Arduino Uno</strong>, um <strong>Potenciômetro</strong> e um <strong>LCD 16×2</strong> (display paralelo — sem módulo I2C). Todos estão na biblioteca padrão do Tinkercad.</li>
+    <li>Faça as conexões de acordo com a Seção 4. O pino <em>Wiper</em> (central do potenciômetro) vai ao A0; o V0 do LCD vai ao GND (contraste máximo).</li>
+    <li>Na aba <strong>Código</strong>, escolha <em>Texto</em>, apague o código padrão e cole o código da Seção 5.</li>
     <li>Clique em <strong>Iniciar Simulação</strong>.</li>
-    <li>Gire o potenciômetro da esquerda para a direita. Observe os valores no LCD mudarem conforme a tensão no pino A0 varia de 0V a 5V.</li>
-    <li>Com o código rodando, responda às questões abaixo no seu relatório.</li>
+    <li>Gire o potenciômetro: observe I (corrente em mA) e Q (vazão em m³/h) atualizando no LCD conforme a tensão em A0 varia de 0 V a 5 V.</li>
+    <li>Com o código rodando, responda às questões de análise.</li>
   </ol>
 </section>
 

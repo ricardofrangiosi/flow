@@ -1,7 +1,7 @@
 #include <LiquidCrystal.h>
 
 // Pinos do display LCD paralelo
-LiquidCrystal lcd(12, 11, 5, 4, 3, 2); 
+LiquidCrystal lcd(12, 11, 5, 4, 3, 7);  // RS, EN, D4, D5, D6, D7
 
 // Pinos do Sensor Ultrassônico HC-SR04
 const int TRIG_PIN = 9;
